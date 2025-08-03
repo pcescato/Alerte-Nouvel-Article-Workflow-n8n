@@ -53,7 +53,7 @@ Tu peux adapter :
 
 ## 📄 Licence
 
-MIT – libre à toi de modifier, adapter, partager.
+Apache 2
 
 ---
 

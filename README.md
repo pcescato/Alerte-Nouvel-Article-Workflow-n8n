@@ -6,6 +6,9 @@ Made with ❤️ by @pcescato
 
 # 📬 Alerte Nouvel Article – Workflow n8n
 
+<img width="817" height="702" alt="image" src="https://github.com/user-attachments/assets/8bc39384-1687-47bc-988d-8bfa090aa57e" />
+
+
 Ce workflow `n8n` permet d'envoyer automatiquement une notification par email aux abonnés (rôle `subscriber`) lorsqu’un nouvel article est publié sur un site WordPress. Il est conçu pour s’intégrer avec WP Webhooks et utilise un modèle LLM pour générer une accroche personnalisée.
 
 ## 🚀 Fonctionnement

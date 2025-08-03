@@ -4,6 +4,8 @@
 Lang: French 🇫🇷
 Made with ❤️ by @pcescato
 
+🔗 Ce code a servi d'exemple dans l'article [n8n – l'interface ultime pour l'automatisation](https://zone-test.ovh/n8n-interface-ultime-automatisation/)
+
 # 📬 Alerte Nouvel Article – Workflow n8n
 
 <img width="817" height="702" alt="image" src="https://github.com/user-attachments/assets/8bc39384-1687-47bc-988d-8bfa090aa57e" />

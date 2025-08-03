@@ -1,3 +1,9 @@
+[![n8n](https://img.shields.io/badge/n8n-automation-blue.svg)](https://n8n.io)
+[![OpenRouter](https://img.shields.io/badge/OpenRouter-AI_API-orange)](https://openrouter.ai/)
+
+Lang: French 🇫🇷
+Made with ❤️ by @pcescato
+
 # 📬 Alerte Nouvel Article – Workflow n8n
 
 Ce workflow `n8n` permet d'envoyer automatiquement une notification par email aux abonnés (rôle `subscriber`) lorsqu’un nouvel article est publié sur un site WordPress. Il est conçu pour s’intégrer avec WP Webhooks et utilise un modèle LLM pour générer une accroche personnalisée.

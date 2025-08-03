@@ -1,0 +1,181 @@
+{
+  "name": "Alerte Nouvel Article",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-article",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-672, -64],
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "resource": "user",
+        "operation": "getAll",
+        "returnAll": true,
+        "options": {
+          "context": "edit"
+        }
+      },
+      "type": "n8n-nodes-base.wordpress",
+      "typeVersion": 1,
+      "position": [-416, -64],
+      "name": "Get Users"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filtrer les abonnés et formater leurs infos\nconst subscribers = items.filter(item => {\n  const roles = item.json.roles;\n  return Array.isArray(roles) && roles.includes('subscriber');\n});\n\nconst emails = subscribers.map(item => ({\n  email: item.json.email,\n  display_name: item.json.name || item.json.display_name || 'Abonné'\n}));\n\nreturn [{ json: { hasSubscriber: emails.length > 0, emails } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-160, -64],
+      "name": "Filter Subscribers"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.hasSubscriber }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-528, 144],
+      "name": "If Subscribers Exist"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "post_content",
+              "value": "={{ $('Webhook').first().json.body.post.post_content }}",
+              "type": "string"
+            },
+            {
+              "name": "post_title",
+              "value": "={{ $('Webhook').first().json.body.post.post_title }}",
+              "type": "string"
+            },
+            {
+              "name": "emails",
+              "value": "={{ $json.emails }}",
+              "type": "array"
+            },
+            {
+              "name": "hasSubscriber",
+              "value": "={{ $json.hasSubscriber }}",
+              "type": "string"
+            },
+            {
+              "name": "post_permalink",
+              "value": "={{ $('Webhook').first().json.body.post_permalink }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": "="
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-288, 128],
+      "name": "Prepare Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Rédige une accroche pour le lecteur en 3 à 4 phrases maximum, sans spoiler, en respectant mon style d'écriture : {{ $json.post_content }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [-656, 320],
+      "name": "Generate Hook"
+    },
+    {
+      "parameters": {
+        "model": "moonshotai/kimi-k2:free",
+        "options": {
+          "frequencyPenalty": 0.3,
+          "presencePenalty": 0.4,
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [-656, 480],
+      "name": "LLM Model"
+    },
+    {
+      "parameters": {
+        "jsCode": "const emails = $('Prepare Fields').item.json.emails;\nconst postTitle = $('Prepare Fields').item.json.post_title;\nconst postLink = $('Prepare Fields').item.json.post_permalink;\nconst aiAgent = $('Generate Hook').item.json.output;\n\nreturn emails.map(e => ({\n  json: {\n    email: e.email,\n    display_name: e.display_name,\n    post_title: postTitle,\n    post_link: postLink,\n    ai_agent: aiAgent\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-320, 320],
+      "name": "Build Email Payloads"
+    },
+    {
+      "parameters": {
+        "fromEmail": "example@example.com",
+        "toEmail": "={{ $json.email }}",
+        "subject": "=Nouvel article : {{ $json.post_title }}",
+        "html": "=<p>Bonjour {{ $json.display_name }},</p>\n<p>Un nouvel article est disponible sur le site : <a href=\"{{ $json.post_link }}\">{{ $json.post_title }}</a></p>\n<p>{{ $json.ai_agent }}</p>"
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [-160, 320],
+      "name": "Send Email"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Get Users", "type": "main", "index": 0 }]]
+    },
+    "Get Users": {
+      "main": [[{ "node": "Filter Subscribers", "type": "main", "index": 0 }]]
+    },
+    "Filter Subscribers": {
+      "main": [[{ "node": "If Subscribers Exist", "type": "main", "index": 0 }]]
+    },
+    "If Subscribers Exist": {
+      "main": [[{ "node": "Prepare Fields", "type": "main", "index": 0 }]]
+    },
+    "Prepare Fields": {
+      "main": [[{ "node": "Generate Hook", "type": "main", "index": 0 }]]
+    },
+    "LLM Model": {
+      "ai_languageModel": [[{ "node": "Generate Hook", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Generate Hook": {
+      "main": [[{ "node": "Build Email Payloads", "type": "main", "index": 0 }]]
+    },
+    "Build Email Payloads": {
+      "main": [[{ "node": "Send Email", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Paris"
+  },
+  "versionId": "redacted",
+  "id": "workflow-new-article-alert"
+}
